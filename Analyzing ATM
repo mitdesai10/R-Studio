@@ -1,0 +1,131 @@
+# Summary of the Assignment:
+
+# In this assignment, I analyzed the distribution of ATMs in Belgium in 1994. The tasks involved cleaning and transforming the data, handling missing values, and performing statistical analysis using R.
+
+# Key Steps:
+
+# 1. Data Loading and Inspection: Loaded the dataset and inspected its structure.
+# 2. Variable Extraction: Converted each column into individual variables for easier manipulation.
+# 3. Data Transformation: Converted necessary variables to numeric types and rescaled the population variable to thousands.
+# 4. Handling Missing Values: Identified and counted rows with non-missing values.
+# 5. Statistical Analysis: Calculated average values for several variables, considering both non-missing and zero-redefined missing values.
+# 6. Comparative Analysis: Analyzed the relationship between the number of ATMs and average withdrawal metrics, and visualized these relationships using line plots.
+
+# clear everything
+rm(list = ls())
+
+# load data
+url <- 'https://dl.dropboxusercontent.com/s/q6qzbfa1tdcqv6v/belgium_atm.csv'
+df <- read.csv(url, stringsAsFactors = F)
+
+# we can check the structure of the data by running
+
+head(df)
+
+# ==== question 1 ====
+
+# Q1. First, recall that df is a data frame which is like a spreadsheet in Excel. 
+#   Let's convert every column into a separate variable using '$'; for example:
+population <- df$population
+numATMs <- df$numATMs
+
+# do the same for the other columns
+ATMwithdr <- df$ATMwithdr
+withdrvalue <- df$withdrvalue
+unemprate <- df$unemprate
+numbranches <- df$numbranches
+
+# ------ you should not work with 'df' anywhere beyond this line -----
+#   i.e. please only work with the vectors (or create new vectors)
+#   for the rest of this assignment
+
+# ==== question 2 ====
+
+# Q2a. Do the necessary conversion for all variables so that you can apply numeric operations on them
+#   replace the original value of the vector in case of conversion
+
+ATMwithdr <- as.numeric(ATMwithdr)  # don't need to replace in this case because of coersion
+withdrvalue <- as.numeric(withdrvalue)
+
+
+# Q2b. population is in a very different scale. Re-scale it into thousands, i.e., divide population by 1000
+#   and replace the variable
+
+population <- population / 1000 # note: remember to replace population!
+
+# ==== question 3 ====
+
+# You want to take average for all variables but you realized that some variables have missing value
+#   before taking averages, you need to make sure that all observations are taken from the same sets of 
+#   observations (i.e. rows) where no variable is missing 
+
+# Q3a. let's define a logical vector for non-missing rows, i.e. indicate TRUE for rows without any missing values, 
+#   and FALSE for rows with missing values. Name the vector 'nm'. Note that the length of nm will be the same as 
+#   the number of rows in the original data df
+
+nm <- !is.na(ATMwithdr) & !is.na(withdrvalue)   
+# note: I already made the judgement that only these two columns have missings
+#   if not sure, extend this line for all six vectors
+
+
+# Q3b. count the number of non-missing rows in the data df, name it 'count_nm'
+#   count_nm should be one number. Note that there is no such a function 'count'. 
+#   Think about how to count the number of non-missing rows. 
+
+count_nm <- sum(nm)     # note that nm is logical, summing it will sum up the TRUE's as 1's 
+
+# ==== question 4 ====
+
+# Q4. Calculate the averages of number of ATM, number of branches, population, 
+#   unemployment rate, number of withdraw per resident and amount per withdrawl.
+#   In particular, notice that certain variables have missing values and you might want to  
+#   only calculate means for the rows without missing values of any variable
+#   (that is, the rows that you use to calculate the average of all variables should be the same)
+#   Finally, collect results in a vector called 'mean_nm', name elements in the vector by the original variable name
+
+mean_nm <- c(numATMs = mean(numATMs[nm]), numbranches = mean(numbranches[nm]), 
+             population = mean(population[nm]), unemprate = mean(unemprate[nm]), 
+             ATMwithdr = mean(ATMwithdr[nm]), withdrvalue = mean(withdrvalue[nm]))
+
+# ==== question 5 ====
+
+# Q5. You realize that the reason for missing values in the original data is that there are no ATMs.
+#   So in that regard you could have defined the missing values to zero
+#   Re-define the missings to zero and assign it to the original variable,
+#   find the total number of observations in the dataset (call it 'count_all'), 
+#   and re-calculate means for the same set of variables and collect results in 'mean_all'
+
+ATMwithdr[!nm] <- 0
+withdrvalue[!nm] <- 0
+#   remark: ! for "not", here to revert a logical vector (important that nm is logical)
+
+count_all <- length(numATMs)
+
+mean_all <- c(numATMs = mean(numATMs), numbranches = mean(numbranches), 
+              population = mean(population), unemprate = mean(unemprate), 
+              ATMwithdr = mean(ATMwithdr), withdrvalue = mean(withdrvalue)) # unconditional mean
+
+# ==== question 6 ====
+
+# Q6a. Let's summarize the average ATMwithdr and average withdrvalue by the number of atms (for range 1-4). 
+# 	That is, for all observations with number of ATMs equal to 1, compute the average ATMwithdr. Do the same 
+#	for observations with number of ATMs equal to 2, 3, and 4. Collect results in two separate vectors and 
+#	name them 'mean_atmwithdr' and 'mean_withdrvalue'
+
+mean_atmwithdr <- c(one = mean(ATMwithdr[numATMs==1]), two = mean(ATMwithdr[numATMs==2]), 
+                    three = mean(ATMwithdr[numATMs==3]), four = mean(ATMwithdr[numATMs==4]))
+
+mean_withdrvalue <- c(one = mean(withdrvalue[numATMs==1]), two = mean(withdrvalue[numATMs==2]), 
+                      three = mean(withdrvalue[numATMs==3]), four = mean(withdrvalue[numATMs==4]))
+
+# remark: same idea as Q4 (just different condition)
+
+
+
+# Q6b. Separately, plot these by the number of ATMs; label the x axis "number of ATMs" and y axis 
+#   "average withdrawl per resident" and "average amount per withdrawl", respectively
+#   use line plot by setting type = 'l' as one of the plot function arguments
+
+plot(1:4, mean_atmwithdr, xlab = "number of ATMs", ylab = "withdrawl per resident", type = 'l')
+
+plot(1:4, mean_withdrvalue, xlab = "number of ATMs", ylab = "amount per withdrawl", type = 'l')
